@@ -11,6 +11,10 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -25,11 +29,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         lvItems = (ListView)findViewById(R.id.lvItems);
-        items = new ArrayList<>();
+        readItems();
         itemsAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, items);
         lvItems.setAdapter(itemsAdapter);
-        items.add("First Item");
-        items.add("2nd Item");
         setupListViewListener();
     }
 
@@ -38,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
         String itemText = etNewItem.getText().toString();
         itemsAdapter.add(itemText);
         etNewItem.setText("");
+        writeItems();
     }
 
     private void setupListViewListener() {
@@ -48,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
                                                    View item, int pos, long id) {
                         items.remove(pos);
                         itemsAdapter.notifyDataSetChanged();
-                        return true;
+                        return writeItems();
                     }
                 }
         );
@@ -78,7 +81,34 @@ public class MainActivity extends AppCompatActivity {
             int pos = data.getIntExtra("pos", -1);
             items.set(pos, itemText);
             itemsAdapter.notifyDataSetChanged();
+            writeItems();
         }
+    }
+
+    private void readItems() {
+        File todoFile = getToDoFile();
+        try {
+            items = new ArrayList<String>(FileUtils.readLines(todoFile));
+        } catch (IOException e){
+            items = new ArrayList<String>();
+        }
+    }
+
+    private boolean writeItems() {
+        File todoFile = getToDoFile();
+        try {
+            FileUtils.writeLines(todoFile, items);
+        } catch (IOException e){
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    private File getToDoFile() {
+        File filesDir = getFilesDir();
+        File todoFile = new File(filesDir, "todo.txt");
+        return todoFile;
     }
 
     @Override
