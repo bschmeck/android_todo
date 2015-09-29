@@ -1,5 +1,6 @@
 package com.s10r.todolist;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
@@ -16,6 +17,8 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<String> items;
     ArrayAdapter<String> itemsAdapter;
     ListView lvItems;
+
+    private final int EDIT_ITEM_REQUEST_CODE = 10;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +52,33 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
         );
+        lvItems.setOnItemClickListener(
+                new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> adapter,
+                                            View item, int pos, long id) {
+                        String itemText = items.get(pos);
+                        launchEditView(itemText, pos);
+                    }
+                }
+        );
+    }
+
+    public void launchEditView(String itemText, int pos) {
+        Intent i = new Intent(MainActivity.this, EditItemActivity.class);
+        i.putExtra("itemText", itemText);
+        i.putExtra("pos", pos);
+        startActivityForResult(i, EDIT_ITEM_REQUEST_CODE);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == RESULT_OK && requestCode == EDIT_ITEM_REQUEST_CODE) {
+            String itemText = data.getStringExtra("itemText");
+            int pos = data.getIntExtra("pos", -1);
+            items.set(pos, itemText);
+            itemsAdapter.notifyDataSetChanged();
+        }
     }
 
     @Override
