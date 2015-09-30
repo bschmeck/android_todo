@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
                                                    View item, int pos, long id) {
                         Item itm = items.remove(pos);
                         itemsAdapter.notifyDataSetChanged();
-                        return removeItem(itm);
+                        return deleteItem(itm);
                     }
                 }
         );
@@ -141,7 +141,13 @@ public class MainActivity extends AppCompatActivity {
         return new Item(id, itemText);
     }
 
-    private boolean removeItem(Item item) {
+    private boolean deleteItem(Item item) {
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+
+        String selection = ToDoListContract.ItemEntry._ID + " LIKE ?";
+        String[] selectionArgs = { String.valueOf(item.id) };
+        db.delete(ToDoListContract.ItemEntry.TABLE_NAME, selection, selectionArgs);
+
         return true;
     }
     @Override
