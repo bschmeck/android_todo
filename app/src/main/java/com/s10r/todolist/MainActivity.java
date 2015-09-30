@@ -1,6 +1,9 @@
 package com.s10r.todolist;
 
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
@@ -21,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<String> items;
     ArrayAdapter<String> itemsAdapter;
     ListView lvItems;
+    ToDoListDbHelper mDbHelper;
 
     private final int EDIT_ITEM_REQUEST_CODE = 10;
 
@@ -29,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         lvItems = (ListView)findViewById(R.id.lvItems);
+        mDbHelper = new ToDoListDbHelper(this.getApplicationContext());
         readItems();
         itemsAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, items);
         lvItems.setAdapter(itemsAdapter);
@@ -40,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
         String itemText = etNewItem.getText().toString();
         itemsAdapter.add(itemText);
         etNewItem.setText("");
-        writeItems();
+        persistNewItem(itemText);
     }
 
     private void setupListViewListener() {
@@ -86,11 +91,27 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void readItems() {
-        File todoFile = getToDoFile();
-        try {
-            items = new ArrayList<String>(FileUtils.readLines(todoFile));
-        } catch (IOException e){
-            items = new ArrayList<String>();
+        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+
+        String[] projection = {
+                ToDoListContract.ItemEntry._ID,
+                ToDoListContract.ItemEntry.COLUMN_NAME_ITEM_TEXT
+        };
+        Cursor c = db.query(
+                ToDoListContract.ItemEntry.TABLE_NAME,
+                projection,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+        items = new ArrayList<String>();
+        c.moveToFirst();
+        int index = c.getColumnIndexOrThrow(ToDoListContract.ItemEntry.COLUMN_NAME_ITEM_TEXT);
+        while (!c.isAfterLast()) {
+            items.add(c.getString(index));
+            c.moveToNext();
         }
     }
 
@@ -103,6 +124,15 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
         return true;
+    }
+
+    private long persistNewItem(String itemText) {
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(ToDoListContract.ItemEntry.COLUMN_NAME_ITEM_TEXT, itemText);
+
+        return db.insert(ToDoListContract.ItemEntry.TABLE_NAME, null, values);
     }
 
     private File getToDoFile() {
