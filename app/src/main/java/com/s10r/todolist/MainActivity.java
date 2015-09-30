@@ -14,15 +14,11 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 
-import org.apache.commons.io.FileUtils;
-
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
-    ArrayList<String> items;
-    ArrayAdapter<String> itemsAdapter;
+    ArrayList<Item> items;
+    ArrayAdapter<Item> itemsAdapter;
     ListView lvItems;
     ToDoListDbHelper mDbHelper;
 
@@ -43,9 +39,9 @@ public class MainActivity extends AppCompatActivity {
     public void onAddItem(View v) {
         EditText etNewItem = (EditText)findViewById(R.id.etNewItem);
         String itemText = etNewItem.getText().toString();
-        itemsAdapter.add(itemText);
+        Item item = persistNewItem(itemText);
+        itemsAdapter.add(item);
         etNewItem.setText("");
-        persistNewItem(itemText);
     }
 
     private void setupListViewListener() {
@@ -54,9 +50,9 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public boolean onItemLongClick(AdapterView<?> adapter,
                                                    View item, int pos, long id) {
-                        items.remove(pos);
+                        Item itm = items.remove(pos);
                         itemsAdapter.notifyDataSetChanged();
-                        return writeItems();
+                        return removeItem(itm);
                     }
                 }
         );
@@ -65,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onItemClick(AdapterView<?> adapter,
                                             View item, int pos, long id) {
-                        String itemText = items.get(pos);
+                        String itemText = items.get(pos).toString();
                         launchEditView(itemText, pos);
                     }
                 }
@@ -83,10 +79,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK && requestCode == EDIT_ITEM_REQUEST_CODE) {
             String itemText = data.getStringExtra("itemText");
+            // TODO: Handle invalid pos
             int pos = data.getIntExtra("pos", -1);
-            items.set(pos, itemText);
+            Item item = items.get(pos);
+            item.text = itemText;
+            persistItem(item);
             itemsAdapter.notifyDataSetChanged();
-            writeItems();
         }
     }
 
@@ -106,41 +104,46 @@ public class MainActivity extends AppCompatActivity {
                 null,
                 null
         );
-        items = new ArrayList<String>();
+        items = new ArrayList<Item>();
         c.moveToFirst();
-        int index = c.getColumnIndexOrThrow(ToDoListContract.ItemEntry.COLUMN_NAME_ITEM_TEXT);
+        int indexId = c.getColumnIndexOrThrow(ToDoListContract.ItemEntry._ID);
+        int indexText = c.getColumnIndexOrThrow(ToDoListContract.ItemEntry.COLUMN_NAME_ITEM_TEXT);
         while (!c.isAfterLast()) {
-            items.add(c.getString(index));
+            long id = c.getLong(indexId);
+            String text = c.getString(indexText);
+            items.add(new Item(id, text));
             c.moveToNext();
         }
     }
 
-    private boolean writeItems() {
-        File todoFile = getToDoFile();
-        try {
-            FileUtils.writeLines(todoFile, items);
-        } catch (IOException e){
-            e.printStackTrace();
-            return false;
-        }
-        return true;
+    private void persistItem(Item item) {
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(ToDoListContract.ItemEntry.COLUMN_NAME_ITEM_TEXT, item.text);
+
+        String selection = ToDoListContract.ItemEntry._ID + " LIKE ?";
+        String[] selectionArgs = { String.valueOf(item.id) };
+
+        int count = db.update(ToDoListContract.ItemEntry.TABLE_NAME,
+                values,
+                selection,
+                selectionArgs);
     }
 
-    private long persistNewItem(String itemText) {
+    private Item persistNewItem(String itemText) {
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
         ContentValues values = new ContentValues();
         values.put(ToDoListContract.ItemEntry.COLUMN_NAME_ITEM_TEXT, itemText);
 
-        return db.insert(ToDoListContract.ItemEntry.TABLE_NAME, null, values);
+        long id = db.insert(ToDoListContract.ItemEntry.TABLE_NAME, null, values);
+        return new Item(id, itemText);
     }
 
-    private File getToDoFile() {
-        File filesDir = getFilesDir();
-        File todoFile = new File(filesDir, "todo.txt");
-        return todoFile;
+    private boolean removeItem(Item item) {
+        return true;
     }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
