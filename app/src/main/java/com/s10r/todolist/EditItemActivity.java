@@ -57,4 +57,9 @@ public class EditItemActivity extends AppCompatActivity {
         setResult(RESULT_OK, data);
         this.finish();
     }
+
+    public void onCancel(View v) {
+        setResult(RESULT_CANCELED);
+        this.finish();
+    }
 }

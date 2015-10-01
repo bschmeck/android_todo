@@ -36,8 +36,18 @@
         android:layout_height="wrap_content"
         android:text="Save"
         android:id="@+id/btnSave"
-        android:layout_centerVertical="true"
+        android:onClick="onSave"
+        android:layout_alignParentBottom="true"
+        android:layout_alignRight="@+id/etItemText"
+        android:layout_alignEnd="@+id/etItemText" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Cancel"
+        android:id="@+id/btnCancel"
+        android:onClick="onCancel"
+        android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:onClick="onSave"/>
+        android:layout_alignParentStart="true" />
 </RelativeLayout>
