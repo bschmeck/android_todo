@@ -1,12 +1,18 @@
 package com.s10r.todolist;
 
+import android.app.DatePickerDialog;
+import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.TextView;
+
+import java.util.Calendar;
 
 public class EditItemActivity extends AppCompatActivity {
     int pos;
@@ -18,6 +24,31 @@ public class EditItemActivity extends AppCompatActivity {
         String itemText = getIntent().getStringExtra("itemText");
         this.pos = getIntent().getIntExtra("pos", -1);
         setText(itemText);
+        registerHandlers();
+    }
+
+    private void registerHandlers() {
+        final EditItemActivity self = this;
+        EditText etDueDate = (EditText)findViewById(R.id.etDueDate);
+        etDueDate.setFocusableInTouchMode(false);
+        etDueDate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final Calendar c = Calendar.getInstance();
+                int year = c.get(Calendar.YEAR);
+                int month = c.get(Calendar.MONTH);
+                int day = c.get(Calendar.DAY_OF_MONTH);
+
+                Dialog dialog = new DatePickerDialog(self, new DatePickerDialog.OnDateSetListener() {
+                    public void onDateSet(DatePicker view, int year, int month, int day) {
+                        TextView etDueDate = (TextView) findViewById(R.id.etDueDate);
+                        String dueDate = String.format("%d-%d-%d", year, month + 1, day);
+                        etDueDate.setText(dueDate);
+                    }
+                }, year, month, day);
+                dialog.show();
+            }
+        });
     }
 
     private void setText(String text) {
