@@ -1,6 +1,5 @@
 package com.s10r.todolist;
 
-import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -39,7 +38,8 @@ public class MainActivity extends AppCompatActivity {
     public void onAddItem(View v) {
         EditText etNewItem = (EditText)findViewById(R.id.etNewItem);
         String itemText = etNewItem.getText().toString();
-        Item item = persistNewItem(itemText);
+        Item item = new Item(mDbHelper, itemText);
+        item.save();
         itemsAdapter.add(item);
         etNewItem.setText("");
     }
@@ -52,7 +52,8 @@ public class MainActivity extends AppCompatActivity {
                                                    View item, int pos, long id) {
                         Item itm = items.remove(pos);
                         itemsAdapter.notifyDataSetChanged();
-                        return deleteItem(itm);
+                        itm.delete();
+                        return true;
                     }
                 }
         );
@@ -83,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
             int pos = data.getIntExtra("pos", -1);
             Item item = items.get(pos);
             item.text = itemText;
-            persistItem(item);
+            item.save();
             itemsAdapter.notifyDataSetChanged();
         }
     }
@@ -91,13 +92,9 @@ public class MainActivity extends AppCompatActivity {
     private void readItems() {
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
-        String[] projection = {
-                ToDoListContract.ItemEntry._ID,
-                ToDoListContract.ItemEntry.COLUMN_NAME_ITEM_TEXT
-        };
         Cursor c = db.query(
                 ToDoListContract.ItemEntry.TABLE_NAME,
-                projection,
+                Item.COLUMN_PROJECTION,
                 null,
                 null,
                 null,
@@ -106,50 +103,13 @@ public class MainActivity extends AppCompatActivity {
         );
         items = new ArrayList<Item>();
         c.moveToFirst();
-        int indexId = c.getColumnIndexOrThrow(ToDoListContract.ItemEntry._ID);
-        int indexText = c.getColumnIndexOrThrow(ToDoListContract.ItemEntry.COLUMN_NAME_ITEM_TEXT);
         while (!c.isAfterLast()) {
-            long id = c.getLong(indexId);
-            String text = c.getString(indexText);
-            items.add(new Item(id, text));
+            items.add(new Item(mDbHelper, c));
             c.moveToNext();
         }
+        c.close();
     }
 
-    private void persistItem(Item item) {
-        SQLiteDatabase db = mDbHelper.getWritableDatabase();
-
-        ContentValues values = new ContentValues();
-        values.put(ToDoListContract.ItemEntry.COLUMN_NAME_ITEM_TEXT, item.text);
-
-        String selection = ToDoListContract.ItemEntry._ID + " LIKE ?";
-        String[] selectionArgs = { String.valueOf(item.id) };
-
-        int count = db.update(ToDoListContract.ItemEntry.TABLE_NAME,
-                values,
-                selection,
-                selectionArgs);
-    }
-
-    private Item persistNewItem(String itemText) {
-        SQLiteDatabase db = mDbHelper.getWritableDatabase();
-
-        ContentValues values = new ContentValues();
-        values.put(ToDoListContract.ItemEntry.COLUMN_NAME_ITEM_TEXT, itemText);
-
-        long id = db.insert(ToDoListContract.ItemEntry.TABLE_NAME, null, values);
-        return new Item(id, itemText);
-    }
-
-    private boolean deleteItem(Item item) {
-        SQLiteDatabase db = mDbHelper.getWritableDatabase();
-
-        String selection = ToDoListContract.ItemEntry._ID + " LIKE ?";
-        String[] selectionArgs = { String.valueOf(item.id) };
-        db.delete(ToDoListContract.ItemEntry.TABLE_NAME, selection, selectionArgs);
-
-        return true;
-    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
