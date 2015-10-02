@@ -54,8 +54,9 @@ public class MainActivity extends AppCompatActivity {
                     public boolean onItemLongClick(AdapterView<?> adapter,
                                                    View item, int pos, long id) {
                         Item itm = items.remove(pos);
+                        itm.complete();
+                        items.add(itm);
                         itemsAdapter.notifyDataSetChanged();
-                        itm.delete();
                         return true;
                     }
                 }
@@ -76,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
         i.putExtra("itemText", item.text);
         i.putExtra("pos", pos);
         i.putExtra("dueDate", formatDate(item.dueDate));
+        i.putExtra("isCompleted", item.isCompleted());
         startActivityForResult(i, EDIT_ITEM_REQUEST_CODE);
     }
 
@@ -105,14 +107,20 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK && requestCode == EDIT_ITEM_REQUEST_CODE) {
-            String itemText = data.getStringExtra("itemText");
-            String dueDate = data.getStringExtra("dueDate");
             // TODO: Handle invalid pos
             int pos = data.getIntExtra("pos", -1);
-            Item item = items.get(pos);
-            item.text = itemText;
-            item.dueDate = parseDate(dueDate);
-            item.save();
+            Boolean deleted = data.getBooleanExtra("isDeleted", false);
+            if (deleted) {
+                Item item = items.remove(pos);
+                item.delete();
+            } else {
+                String itemText = data.getStringExtra("itemText");
+                String dueDate = data.getStringExtra("dueDate");
+                Item item = items.get(pos);
+                item.text = itemText;
+                item.dueDate = parseDate(dueDate);
+                item.save();
+            }
             itemsAdapter.notifyDataSetChanged();
         }
     }
@@ -127,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
                 null,
                 null,
                 null,
-                null
+                ToDoListContract.ItemEntry.COLUMN_NAME_COMPLETED_AT
         );
         items = new ArrayList<Item>();
         c.moveToFirst();
