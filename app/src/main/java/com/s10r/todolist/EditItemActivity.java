@@ -138,8 +138,11 @@ public class EditItemActivity extends AppCompatActivity {
         this.finish();
     }
 
-    public void onCancel(View v) {
-        setResult(RESULT_CANCELED);
+    public void onDelete(View v) {
+        Intent data = new Intent();
+        data.putExtra("isDeleted", true);
+        data.putExtra("pos", pos);
+        setResult(RESULT_OK, data);
         this.finish();
     }
 }
