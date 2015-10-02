@@ -13,7 +13,10 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
     ArrayList<Item> items;
@@ -62,28 +65,53 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onItemClick(AdapterView<?> adapter,
                                             View item, int pos, long id) {
-                        String itemText = items.get(pos).toString();
-                        launchEditView(itemText, pos);
+                        launchEditView(pos, items.get(pos));
                     }
                 }
         );
     }
 
-    public void launchEditView(String itemText, int pos) {
+    public void launchEditView(int pos, Item item) {
         Intent i = new Intent(MainActivity.this, EditItemActivity.class);
-        i.putExtra("itemText", itemText);
+        i.putExtra("itemText", item.text);
         i.putExtra("pos", pos);
+        i.putExtra("dueDate", formatDate(item.dueDate));
         startActivityForResult(i, EDIT_ITEM_REQUEST_CODE);
     }
 
+    private String formatDate(Date date) {
+        if (date == null) {
+            return null;
+        }
+
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-M-dd HH:mm");
+        return formatter.format(date);
+    }
+
+    private Date parseDate(String dateStr) {
+        if (dateStr == null) {
+            return null;
+        }
+
+        ParsePosition pos = new ParsePosition(0);
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-M-dd HH:mm");
+        Date date = formatter.parse(dateStr, pos);
+        if (date != null) {
+            return date;
+        }
+        formatter = new SimpleDateFormat("yyyy-M-dd");
+        return formatter.parse(dateStr, pos);
+    }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK && requestCode == EDIT_ITEM_REQUEST_CODE) {
             String itemText = data.getStringExtra("itemText");
+            String dueDate = data.getStringExtra("dueDate");
             // TODO: Handle invalid pos
             int pos = data.getIntExtra("pos", -1);
             Item item = items.get(pos);
             item.text = itemText;
+            item.dueDate = parseDate(dueDate);
             item.save();
             itemsAdapter.notifyDataSetChanged();
         }
