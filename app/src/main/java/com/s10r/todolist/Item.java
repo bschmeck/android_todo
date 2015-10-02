@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -16,11 +17,13 @@ public class Item {
     public long id = -1;
     public String text;
     public Date dueDate;
+    public Date completedAt;
 
     public static String[] COLUMN_PROJECTION = {
         ToDoListContract.ItemEntry._ID,
         ToDoListContract.ItemEntry.COLUMN_NAME_ITEM_TEXT,
-        ToDoListContract.ItemEntry.COLUMN_NAME_DUE_AT
+        ToDoListContract.ItemEntry.COLUMN_NAME_DUE_AT,
+        ToDoListContract.ItemEntry.COLUMN_NAME_COMPLETED_AT
     };
 
     public Item(ToDoListDbHelper dbHelper, String text) {
@@ -35,11 +38,24 @@ public class Item {
             int indexId = cursor.getColumnIndexOrThrow(ToDoListContract.ItemEntry._ID);
             int indexText = cursor.getColumnIndexOrThrow(ToDoListContract.ItemEntry.COLUMN_NAME_ITEM_TEXT);
             int indexDueDate = cursor.getColumnIndexOrThrow(ToDoListContract.ItemEntry.COLUMN_NAME_DUE_AT);
+            int indexCompletedAt = cursor.getColumnIndexOrThrow(ToDoListContract.ItemEntry.COLUMN_NAME_COMPLETED_AT);
             this.id = cursor.getLong(indexId);
             this.text = cursor.getString(indexText);
             this.dueDate = parseDate(cursor.getString(indexDueDate));
+            this.completedAt = parseDate(cursor.getString(indexCompletedAt));
         }
     }
+
+    public void complete() {
+        if (isCompleted()) {
+            return;
+        }
+        
+        this.completedAt = Calendar.getInstance().getTime();
+        this.save();
+    }
+
+    public boolean isCompleted() { return completedAt != null; }
 
     public void save() {
         if (isNewRecord()) {
@@ -84,6 +100,7 @@ public class Item {
         ContentValues values = new ContentValues();
         values.put(ToDoListContract.ItemEntry.COLUMN_NAME_ITEM_TEXT, text);
         values.put(ToDoListContract.ItemEntry.COLUMN_NAME_DUE_AT, formatDate(dueDate));
+        values.put(ToDoListContract.ItemEntry.COLUMN_NAME_COMPLETED_AT, formatDate(completedAt));
 
         return values;
     }

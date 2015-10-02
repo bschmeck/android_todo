@@ -53,9 +53,9 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public boolean onItemLongClick(AdapterView<?> adapter,
                                                    View item, int pos, long id) {
-                        Item itm = items.remove(pos);
+                        Item itm = items.get(pos);
+                        itm.complete();
                         itemsAdapter.notifyDataSetChanged();
-                        itm.delete();
                         return true;
                     }
                 }
@@ -65,7 +65,10 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onItemClick(AdapterView<?> adapter,
                                             View item, int pos, long id) {
-                        launchEditView(pos, items.get(pos));
+                        Item itm = items.get(pos);
+                        if (!itm.isCompleted()) {
+                            launchEditView(pos, itm);
+                        }
                     }
                 }
         );
