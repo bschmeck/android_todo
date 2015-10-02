@@ -18,14 +18,17 @@ import java.util.Calendar;
 
 public class EditItemActivity extends AppCompatActivity {
     int pos;
+    final String DUE_DATE_PROMPT = "Tap To Set Due Date";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_item);
         String itemText = getIntent().getStringExtra("itemText");
+        String dueDate = getIntent().getStringExtra("dueDate");
         this.pos = getIntent().getIntExtra("pos", -1);
         setText(itemText);
+        setDueDate(dueDate);
         registerHandlers();
     }
 
@@ -81,6 +84,14 @@ public class EditItemActivity extends AppCompatActivity {
         etItemText.requestFocus();
         etItemText.setSelection(text.length());
     }
+
+    private void setDueDate(String dueDate) {
+        TextView etDueDate = (TextView)findViewById(R.id.etDueDate);
+        if (dueDate == null) {
+            dueDate = DUE_DATE_PROMPT;
+        }
+        etDueDate.setText(dueDate);
+    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -106,9 +117,15 @@ public class EditItemActivity extends AppCompatActivity {
     public void onSave(View v) {
         EditText etItemText = (EditText)findViewById(R.id.etItemText);
         String itemText = etItemText.getText().toString();
+        TextView etDueDate = (TextView)findViewById(R.id.etDueDate);
+        String dueDate = etDueDate.getText().toString();
+        if (dueDate == DUE_DATE_PROMPT) {
+            dueDate = null;
+        }
         Intent data = new Intent();
         data.putExtra("itemText", itemText);
         data.putExtra("pos", this.pos);
+        data.putExtra("dueDate", dueDate);
         setResult(RESULT_OK, data);
         this.finish();
     }
