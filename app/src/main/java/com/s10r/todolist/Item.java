@@ -129,6 +129,11 @@ public class Item {
         if (isCompleted()) {
             prefix = "DONE - ";
         }
-        return prefix + text;
+        String suffix = "";
+        if (dueDate != null) {
+            SimpleDateFormat formatter = new SimpleDateFormat(" (M/dd)");
+            suffix = formatter.format(dueDate);
+        }
+        return prefix + text + suffix;
     }
 }
