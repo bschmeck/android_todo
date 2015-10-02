@@ -53,8 +53,9 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public boolean onItemLongClick(AdapterView<?> adapter,
                                                    View item, int pos, long id) {
-                        Item itm = items.get(pos);
+                        Item itm = items.remove(pos);
                         itm.complete();
+                        items.add(itm);
                         itemsAdapter.notifyDataSetChanged();
                         return true;
                     }
@@ -130,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
                 null,
                 null,
                 null,
-                null
+                ToDoListContract.ItemEntry.COLUMN_NAME_COMPLETED_AT
         );
         items = new ArrayList<Item>();
         c.moveToFirst();
