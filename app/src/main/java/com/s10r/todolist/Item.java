@@ -60,22 +60,23 @@ public class Item {
     private void insert() {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
-        ContentValues values = new ContentValues();
-        values.put(ToDoListContract.ItemEntry.COLUMN_NAME_ITEM_TEXT, text);
-
-        this.id = db.insert(ToDoListContract.ItemEntry.TABLE_NAME, null, values);
+        this.id = db.insert(ToDoListContract.ItemEntry.TABLE_NAME, null, contentValues());
     }
 
     private void update() {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
-        ContentValues values = new ContentValues();
-        values.put(ToDoListContract.ItemEntry.COLUMN_NAME_ITEM_TEXT, text);
-
         String selection = ToDoListContract.ItemEntry._ID + " LIKE ?";
         String[] selectionArgs = { String.valueOf(id) };
 
-        db.update(ToDoListContract.ItemEntry.TABLE_NAME, values, selection, selectionArgs);
+        db.update(ToDoListContract.ItemEntry.TABLE_NAME, contentValues(), selection, selectionArgs);
+    }
+
+    private ContentValues contentValues() {
+        ContentValues values = new ContentValues();
+        values.put(ToDoListContract.ItemEntry.COLUMN_NAME_ITEM_TEXT, text);
+        
+        return values;
     }
 
     public String toString() {
