@@ -26,10 +26,18 @@ public class EditItemActivity extends AppCompatActivity {
         setContentView(R.layout.activity_edit_item);
         String itemText = getIntent().getStringExtra("itemText");
         String dueDate = getIntent().getStringExtra("dueDate");
+        Boolean isCompleted = getIntent().getBooleanExtra("isCompleted", true);
         this.pos = getIntent().getIntExtra("pos", -1);
         setText(itemText);
         setDueDate(dueDate);
-        registerHandlers();
+        if (isCompleted) {
+            EditText etItemText = (EditText)findViewById(R.id.etItemText);
+            etItemText.setEnabled(false);
+            EditText etDueDate = (EditText)findViewById(R.id.etDueDate);
+            etDueDate.setEnabled(false);
+        } else {
+            registerHandlers();
+        }
     }
 
     private void registerHandlers() {

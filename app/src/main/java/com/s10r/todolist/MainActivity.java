@@ -66,10 +66,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onItemClick(AdapterView<?> adapter,
                                             View item, int pos, long id) {
-                        Item itm = items.get(pos);
-                        if (!itm.isCompleted()) {
-                            launchEditView(pos, itm);
-                        }
+                        launchEditView(pos, items.get(pos));
                     }
                 }
         );
@@ -80,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
         i.putExtra("itemText", item.text);
         i.putExtra("pos", pos);
         i.putExtra("dueDate", formatDate(item.dueDate));
+        i.putExtra("completed", item.isCompleted());
         startActivityForResult(i, EDIT_ITEM_REQUEST_CODE);
     }
 
