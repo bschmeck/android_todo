@@ -50,7 +50,7 @@ public class Item {
         if (isCompleted()) {
             return;
         }
-        
+
         this.completedAt = Calendar.getInstance().getTime();
         this.save();
     }
@@ -125,6 +125,10 @@ public class Item {
     }
 
     public String toString() {
-        return text;
+        String prefix = "";
+        if (isCompleted()) {
+            prefix = "DONE - ";
+        }
+        return prefix + text;
     }
 }
